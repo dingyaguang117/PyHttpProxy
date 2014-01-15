@@ -16,3 +16,5 @@ PyHttpProxy
 
 暂时支持https，下面的更新会支持
 
+
+依赖： wxpython
