@@ -7,6 +7,7 @@ import urllib2
 from urllib2 import HTTPError
 import threading
 from SocketServer import ThreadingMixIn
+import socket
 
 
 class RedirectHandler(urllib2.HTTPRedirectHandler):
@@ -80,9 +81,8 @@ class Handle(BaseHTTPServer.BaseHTTPRequestHandler):
                 data = ret.read(BUFFER_SIZE)
 
 
-
     def do_GET(self):
-
+        print 'raw requestline:',self.raw_requestline
         try:
             req = urllib2.Request(self.path,headers=self.headers)
             ret = urllib2.urlopen(req)
@@ -106,15 +106,43 @@ class Handle(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_CONNECT(self):
 
+        #self.send_response(200)
+        #self.end_headers()
+        #self.wfile.write('https\r\n\r\n')
+
+        soc = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        host,port = self.path.split(':')
+        port = int(port)
+        print (host,port)
+        print 'raw requestline:',self.raw_requestline
+
+        soc.connect((host,port))
+
         self.send_response(200)
         self.end_headers()
-        self.wfile.write('https\r\n\r\n')
+
+        soc_fd = soc.makefile()
+        t1 = threading.Thread(target=self._https_forward,args=(self.rfile,soc_fd,'th1'))
+        t2 = threading.Thread(target=self._https_forward,args=(soc_fd,self.wfile,'th2'))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+
+    def _https_forward(self,fd1,fd2,description):
+        print description,'started!!'
+        BUFFER_SIZE = 40
+        data = fd1.read(BUFFER_SIZE)
+        while data:
+            print description,'data >\n',data
+            fd2.write(data)
+            data = fd1.read(BUFFER_SIZE)
 
 
 
 class ThreadHttpServer(ThreadingMixIn,BaseHTTPServer.HTTPServer):
     pass
-
 
 
 def main():
