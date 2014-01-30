@@ -24,7 +24,6 @@ urllib2.install_opener(urllib2.build_opener(RedirectHandler))
 
 class Handle(BaseHTTPServer.BaseHTTPRequestHandler):
 
-
     def __write_success(self,ret):
         request = {}
         request['method'] = self.command
@@ -53,17 +52,22 @@ class Handle(BaseHTTPServer.BaseHTTPRequestHandler):
         #完成代理任务，数据写回
         self.send_response(ret.getcode())
         for key in ret.headers.keys():
+            if key == 'transfer-encoding' and ret.headers['transfer-encoding'] == 'chunked' and \
+                ret.headers.get('content-encoding','') == 'gzip':
+                print '==== skip chunked header!!!!'
+                continue
             self.send_header(key,ret.headers[key])
         self.end_headers()
-
-
         BUFFER_SIZE = 1024
-
         data = ret.read(BUFFER_SIZE)
+
+
         #处理 chunked 传输编码
-        if ret.headers.get('transfer-encoding','') == 'chunked':
+        if ret.headers.get('transfer-encoding','') == 'chunked' and \
+            ret.headers.get('content-encoding','') != 'gzip':
             while data:
                 size = len(data)
+                print '===chunked size:',size,hex(size).upper()[2:]
                 self.wfile.write('%s\r\n'%hex(size).upper()[2:])
                 self.wfile.write(data)
                 self.wfile.write('\r\n')
