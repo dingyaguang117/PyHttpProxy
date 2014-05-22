@@ -17,4 +17,16 @@ PyHttpProxy
 暂时支持https，下面的更新会支持
 
 
+使用方法
+========
+
+图形启动
+--------
+python gui/MainFrame.py
+
 依赖： wxpython
+
+
+命令行启动
+---------
+python core/HttpProxy.py
