@@ -106,43 +106,42 @@ class Handle(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_CONNECT(self):
 
-        #self.send_response(200)
-        #self.end_headers()
-        #self.wfile.write('https\r\n\r\n')
+        print self.protocol_version
+
+        self.send_response(200)
+        self.end_headers()
+
+        #self.wfile.write('HTTP/1.1 200 OK\r\n\r\n')
 
         soc = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         host,port = self.path.split(':')
         port = int(port)
         print (host,port)
         print 'raw requestline:',self.raw_requestline
-
         soc.connect((host,port))
-
-        self.send_response(200)
-        self.end_headers()
-
-        soc_fd = soc.makefile()
-        t1 = threading.Thread(target=self._https_forward,args=(self.rfile,soc_fd,'th1'))
-        t2 = threading.Thread(target=self._https_forward,args=(soc_fd,self.wfile,'th2'))
+        soc_fd = soc.makefile('rw', 0)
+        t1 = threading.Thread(target=self._https_forward, args=(self.connection, soc, 'browser -> server'))
+        t2 = threading.Thread(target=self._https_forward, args=(soc, self.connection, 'server -> browser'))
         t1.start()
         t2.start()
         t1.join()
         t2.join()
 
-
-    def _https_forward(self,fd1,fd2,description):
-        print description,'started!!'
-        BUFFER_SIZE = 40
-        data = fd1.read(BUFFER_SIZE)
+    def _https_forward(self, soc1, soc2, description):
+        print description, 'started!!'
+        BUFFER_SIZE = 1024
+        data = soc1.recv(BUFFER_SIZE)
         while data:
-            print description,'data >\n',data
-            fd2.write(data)
-            data = fd1.read(BUFFER_SIZE)
+            #print description, 'data:\n',data
+            soc2.sendall(data)
+            data = soc1.recv(BUFFER_SIZE)
+        print description, 'down!!'
 
 
 
-class ThreadHttpServer(ThreadingMixIn,BaseHTTPServer.HTTPServer):
+class ThreadHttpServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     pass
+
 
 
 def main():

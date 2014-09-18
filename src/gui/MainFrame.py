@@ -67,7 +67,7 @@ class MainFrame(wx.Frame):
     def _readProxyErrorProc(self):
         while True:
             if self._proxyProcess == None or self._proxyProcess.poll() != None:
-                wx.CallAfter(self.textCtrl.AppendText,'[ERROR] 代理进程不存在，_readProxyErrorProc 线程退出 ')
+                wx.CallAfter(self.textCtrl.AppendText,'[ERROR] 代理进程不存在，_readProxyErrorProc 线程退出\n')
                 break
             data = self._proxyProcess.stderr.readline()
             wx.CallAfter(self.textCtrl.AppendText,data)
