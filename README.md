@@ -1,7 +1,7 @@
 PyHttpProxy
 ===========
 
-这是一个简单的Http代理程序，类似于Paros
+这是一个简单的HTTP(支持HTTPS）代理程序，类似于Paros
 
 可以用来搭建一个Http代理服务器，用于监控Http请求。可以用来分析一些App的请求。
 
@@ -13,8 +13,6 @@ PyHttpProxy
 1. 禁止自动3xx 跳转
 
 2. chunked 传输编码的反解
-
-暂时支持https，下面的更新会支持
 
 
 使用方法
